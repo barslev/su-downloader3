@@ -17,12 +17,18 @@ export function getMetadata(url, threads, savePath, saveDir) {
 			var response = x[0]
 			var { statusCode } = response
 			if(statusCode >= 400 && statusCode <= 512) {
-				return throwError(response)
+				return (
+                    /* TODO: JSFix could not patch the breaking change:
+                    throwError: In an extreme corner case for usage, throwError is no longer able to emit a function as an error directly. If you need to push a function as an error, you will have to use the factory function to return the function like so: throwError(() => functionToEmit), in other words throwError(() => () => console.log('called later')). */
+                    throwError(response)
+                )
 			} else {
 				return of(parseInt(response.headers['content-length']))
 			}
 		}),
-		map(filesize => {
+		/* TODO: JSFix could not patch the breaking change:
+        map: thisArg will now default to undefined. The previous default of MapSubscriber never made any sense. This will only affect code that calls map with a function and references this like so: source.pipe(map(function () { console.log(this); })). There wasn't anything useful about doing this, so the breakage is expected to be very minimal. If anything we're no longer leaking an implementation detail. */
+        map(filesize => {
 
 			var ranges = calculateRanges(filesize, threads)
 
@@ -48,7 +54,9 @@ export function getMetadata(url, threads, savePath, saveDir) {
 
 export function readMetadata(sudPath) {
 	return fsReadFile(sudPath).pipe(
-		map(rawMeta => JSON.parse(rawMeta))
+		/* TODO: JSFix could not patch the breaking change:
+        map: thisArg will now default to undefined. The previous default of MapSubscriber never made any sense. This will only affect code that calls map with a function and references this like so: source.pipe(map(function () { console.log(this); })). There wasn't anything useful about doing this, so the breakage is expected to be very minimal. If anything we're no longer leaking an implementation detail. */
+        map(rawMeta => JSON.parse(rawMeta))
 	)
 }
 
@@ -57,7 +65,9 @@ export function readMetadata(sudPath) {
 //and the meta data object
 export function makeRequests(meta$, options) {
 	return meta$.pipe(
-		map(meta => {
+		/* TODO: JSFix could not patch the breaking change:
+        map: thisArg will now default to undefined. The previous default of MapSubscriber never made any sense. This will only affect code that calls map with a function and references this like so: source.pipe(map(function () { console.log(this); })). There wasn't anything useful about doing this, so the breakage is expected to be very minimal. If anything we're no longer leaking an implementation detail. */
+        map(meta => {
 
 			var { url, savePath, ranges } = meta
 			var rangeHeaders = getRangeHeaders(savePath, ranges)
@@ -102,7 +112,9 @@ export function getThreadPositions(requestsAndMeta$) {
 					concatMap(data => 
 						of(data).pipe(
 							concatMap(data => writeToStream(data)),
-							map(() => Buffer.byteLength(data))
+							/* TODO: JSFix could not patch the breaking change:
+                            map: thisArg will now default to undefined. The previous default of MapSubscriber never made any sense. This will only affect code that calls map with a function and references this like so: source.pipe(map(function () { console.log(this); })). There wasn't anything useful about doing this, so the breakage is expected to be very minimal. If anything we're no longer leaking an implementation detail. */
+                            map(() => Buffer.byteLength(data))
 						)
 					),
 					scan((threadPosition, chunkSize) => threadPosition + chunkSize, startPos),

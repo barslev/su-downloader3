@@ -72,14 +72,18 @@ export function rebuildFiles(meta) {
 	//differ from the range upper bound by no more than 1 byte (this only occurs for the first partial file
 	//as it starts at 0)
 	var notCompleted = ranges.some((range, index) => Math.abs(range[0] + getLocalFilesize(partialPath(savePath, index)) - range[1]) > 1)
-	if(notCompleted) throwError('REBUILD ERROR: INCORRECT PARTIAL FILE SIZEZ')
+	if(notCompleted) /* TODO: JSFix could not patch the breaking change:
+    throwError: In an extreme corner case for usage, throwError is no longer able to emit a function as an error directly. If you need to push a function as an error, you will have to use the factory function to return the function like so: throwError(() => functionToEmit), in other words throwError(() => () => console.log('called later')). */
+    throwError('REBUILD ERROR: INCORRECT PARTIAL FILE SIZEZ')
 
 	//if an entity at the save path already exists, delete it
 	//the user should be responsbile for ensuring this does not happen if they do not want it to
 	if(fs.existsSync(savePath)) fs.unlinkSync(savePath)
 
 	return range(0, ranges.length).pipe(
-		map(index => partialPath(savePath, index)),
+		/* TODO: JSFix could not patch the breaking change:
+        map: thisArg will now default to undefined. The previous default of MapSubscriber never made any sense. This will only affect code that calls map with a function and references this like so: source.pipe(map(function () { console.log(this); })). There wasn't anything useful about doing this, so the breakage is expected to be very minimal. If anything we're no longer leaking an implementation detail. */
+        map(index => partialPath(savePath, index)),
 		//transform each partial file name into an observable that when subscribed to appends data to
 		//the save file and deletes it
 		//concatMap ensures this is done in order

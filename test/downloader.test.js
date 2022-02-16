@@ -25,7 +25,9 @@ if(!fs.existsSync('./test/downloads/big/')) fs.mkdirSync('./test/downloads/big/'
 test('simple download and progress info test (monotonically increasing download percentage)', done => {
 	var download$ = startDownload(locations, options).pipe(
 		skip(1),
-		map(x => x.total.percentage),
+		/* TODO: JSFix could not patch the breaking change:
+        map: thisArg will now default to undefined. The previous default of MapSubscriber never made any sense. This will only affect code that calls map with a function and references this like so: source.pipe(map(function () { console.log(this); })). There wasn't anything useful about doing this, so the breakage is expected to be very minimal. If anything we're no longer leaking an implementation detail. */
+        map(x => x.total.percentage),
 		skip(1),
 		pairwise(),
 		every(x => x[1] > x[0])
